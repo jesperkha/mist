@@ -1,39 +1,32 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
 	"log"
+	"os"
+	"syscall"
 
 	"github.com/jesperkha/mist/config"
-	"github.com/jesperkha/mist/service"
+	"github.com/jesperkha/mist/database"
+	"github.com/jesperkha/mist/proxy"
+	"github.com/jesperkha/notifier"
 )
 
 func main() {
 	config := config.Load()
-	// notif := notifier.New()
+	notif := notifier.New()
 
-	// // db := database.New(config)
+	// db := database.New(config)
 
-	// s := proxy.New(config)
-	// s.Use(proxy.Logger)
+	s := proxy.New(config)
 
-	// go s.ListenAndServe(notif)
+	s.Use(proxy.Logger)
+	s.Register(database.Service{
+		Name: "foo",
+		Port: "5500",
+	})
 
-	// notif.NotifyOnSignal(os.Interrupt, syscall.SIGTERM)
-	// log.Println("shutdown")
+	go s.ListenAndServe(notif)
 
-	m := service.NewMonitor(config)
-	u, err := m.Poll()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for _, uu := range u {
-		b, _ := json.MarshalIndent(uu, "", "  ")
-		fmt.Println(string(b))
-	}
-
-	m.Close()
-
+	notif.NotifyOnSignal(os.Interrupt, syscall.SIGTERM)
+	log.Println("shutdown")
 }

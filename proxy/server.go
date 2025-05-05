@@ -2,10 +2,16 @@ package proxy
 
 import (
 	"context"
+	"fmt"
+	"io"
 	"log"
+	"maps"
 	"net/http"
+	"net/url"
+	"strings"
 
 	"github.com/jesperkha/mist/config"
+	"github.com/jesperkha/mist/database"
 	"github.com/jesperkha/notifier"
 )
 
@@ -27,12 +33,60 @@ func New(config *config.Config) *Server {
 		h:      mux,
 	}
 
-	s.handle("/", func(ctx *Context) int {
-		ctx.File("web/index.html")
-		return http.StatusOK
-	})
-
 	return s
+}
+
+func (s *Server) Register(service database.Service) {
+	url, err := url.Parse(serviceUrl(service.Port))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	endpoint := "/" + service.Name
+
+	s.handle(endpoint, func(ctx *Context) int {
+		redirectTo(ctx.r.URL, url)
+
+		res, err := http.DefaultTransport.RoundTrip(ctx.r)
+		if err != nil {
+			log.Println(err)
+			return http.StatusInternalServerError
+		}
+
+		defer res.Body.Close()
+
+		if _, err := io.Copy(ctx.w, res.Body); err != nil {
+			log.Println(err)
+			return http.StatusInternalServerError
+		}
+
+		maps.Copy(ctx.w.Header(), res.Header)
+		return res.StatusCode
+	})
+}
+
+func serviceUrl(port string) string {
+	if port[0] != ':' {
+		port = ":" + port
+	}
+	return fmt.Sprintf("http://127.0.0.1%s", port)
+}
+
+func redirectTo(req *url.URL, to *url.URL) {
+	req.Host = to.Host
+	req.Scheme = to.Scheme
+	req.Path = removeFirstPathSegment(req.Path)
+}
+
+func removeFirstPathSegment(path string) string {
+	trimmed := strings.Trim(path, "/")
+	split := strings.Split(trimmed, "/")
+
+	if len(split) > 1 {
+		return "/" + strings.Join(split[1:], "/")
+	}
+
+	return "/"
 }
 
 // Handle endpoint with handler wrapped with given middlewares.
@@ -54,10 +108,6 @@ func (s *Server) handle(pattern string, handler Handler, middlewares ...Middlewa
 	}
 
 	s.mux.Handle(pattern, h)
-}
-
-func (s *Server) serveDir(pattern string, filepath string) {
-	s.mux.Handle(pattern, http.FileServer(http.Dir(filepath)))
 }
 
 func (s *Server) ListenAndServe(notif *notifier.Notifier) {
