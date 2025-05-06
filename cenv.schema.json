@@ -1,6 +1,12 @@
 {
-	"lastUpdated": "2025-05-02T22:28:42.123244+02:00",
+	"lastUpdated": "2025-05-06T09:52:33.522513109+02:00",
 	"fields": {
+		"DB_PATH": {
+			"required": true,
+			"public": true,
+			"key": "DB_PATH",
+			"value": "mist.db"
+		},
 		"PORT": {
 			"required": true,
 			"format": ":{number}",
