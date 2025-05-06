@@ -9,24 +9,20 @@ import (
 )
 
 type Database struct {
-	db *gorm.DB
+	conn *gorm.DB
 }
 
 func New(config *config.Config) *Database {
-	db, err := gorm.Open(sqlite.Open(config.BDPath), &gorm.Config{})
+	conn, err := gorm.Open(sqlite.Open(config.BDPath), &gorm.Config{})
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	if err := migrate(db); err != nil {
+	if err := conn.AutoMigrate(&Service{}); err != nil {
 		log.Fatalf("migration: %v", err)
 	}
 
 	return &Database{
-		db: db,
+		conn: conn,
 	}
-}
-
-func migrate(db *gorm.DB) error {
-	return db.AutoMigrate()
 }
