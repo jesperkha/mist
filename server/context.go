@@ -1,4 +1,4 @@
-package proxy
+package server
 
 import (
 	"encoding/json"
@@ -8,8 +8,8 @@ import (
 )
 
 type Context struct {
-	r *http.Request
-	w http.ResponseWriter
+	R *http.Request
+	W http.ResponseWriter
 }
 
 // JSON marshals and writes json data to the response writer.
@@ -19,24 +19,24 @@ func (c *Context) JSON(v any) error {
 		return err
 	}
 
-	c.w.Write(b)
+	c.W.Write(b)
 	return nil
 }
 
 // String is a shorthand for writing bytes to the response writer.
 func (c *Context) String(s string) {
-	c.w.Write([]byte(s))
+	c.W.Write([]byte(s))
 }
 
 // FileDownload writes the file from reader to the response writer and marks
 // it as an attachement (downloaded file).
 func (c *Context) FileDownload(filename string, r io.Reader) error {
-	c.w.Header().Set("Content-Disposition", fmt.Sprintf("attachement;filename=%s", filename))
-	_, err := io.Copy(c.w, r)
+	c.W.Header().Set("Content-Disposition", fmt.Sprintf("attachement;filename=%s", filename))
+	_, err := io.Copy(c.W, r)
 	return err
 }
 
 // Serve static file.
 func (c *Context) File(filename string) {
-	http.ServeFile(c.w, c.r, filename)
+	http.ServeFile(c.W, c.R, filename)
 }

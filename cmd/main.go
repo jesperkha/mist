@@ -15,17 +15,19 @@ func main() {
 	config := config.Load()
 	notif := notifier.New()
 
-	// db := database.New(config)
+	db := database.New(config)
 
-	s := proxy.New(config)
+	p := proxy.New(config)
+	if err := p.RegisterServices(db); err != nil {
+		log.Fatal(err)
+	}
 
-	s.Use(proxy.Logger)
-	s.Register(database.Service{
+	p.RegisterService(database.Service{
 		Name: "foo",
 		Port: "5500",
 	})
 
-	go s.ListenAndServe(notif)
+	go p.ListenAndServe(notif)
 
 	notif.NotifyOnSignal(os.Interrupt, syscall.SIGTERM)
 	log.Println("shutdown")

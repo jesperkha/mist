@@ -1,15 +1,18 @@
 package service
 
 import (
+	"fmt"
 	"log"
 	"strings"
 
 	"github.com/godbus/dbus"
 	"github.com/jesperkha/mist/config"
+	"github.com/jesperkha/mist/database"
 )
 
 type Monitor struct {
 	conn *dbus.Conn
+	db   *database.Database
 	obj  dbus.BusObject
 }
 
@@ -49,7 +52,7 @@ type dbusUnit struct {
 	JobPath     dbus.ObjectPath
 }
 
-func NewMonitor(config *config.Config) *Monitor {
+func NewMonitor(config *config.Config, db *database.Database) *Monitor {
 	conn, err := dbus.SystemBus()
 	if err != nil {
 		log.Fatalf("dbus conn: %v", err)
@@ -57,6 +60,7 @@ func NewMonitor(config *config.Config) *Monitor {
 
 	return &Monitor{
 		conn: conn,
+		db:   db,
 		obj:  conn.Object("org.freedesktop.systemd1", "/org/freedesktop/systemd1"),
 	}
 }
@@ -65,20 +69,41 @@ func (m *Monitor) Close() error {
 	return m.conn.Close()
 }
 
-// Poll all daemons assosiated with mist (correct service file name format).
+func (m *Monitor) serviceNameMap() (map[string]struct{}, error) {
+	services := make(map[string]struct{})
+
+	all, err := m.db.GetAllServices()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, s := range all {
+		services[s.Name] = struct{}{}
+	}
+
+	return services, nil
+}
+
+// Poll returns a list of all services in the database handled by systemd.
 func (m *Monitor) Poll() (units []Unit, err error) {
 	var allUnits []dbusUnit
 	if err := m.obj.Call("org.freedesktop.systemd1.Manager.ListUnits", 0).Store(&allUnits); err != nil {
 		return units, err
 	}
 
+	smap, err := m.serviceNameMap()
+	if err != nil {
+		return units, err
+	}
+
 	for _, u := range allUnits {
-		if !isMistFormat(u.Name) {
+		name := serviceName(u.Name)
+		if _, ok := smap[name]; !ok {
 			continue
 		}
 
 		unit := Unit{
-			Name:        serviceName(u.Name),
+			Name:        name,
 			Filename:    u.Name,
 			Description: u.Description,
 			Status:      status(u),
@@ -104,9 +129,14 @@ func (m *Monitor) StopService(name string) error {
 
 // cmd is either StartUnit or StopUnit
 func (m *Monitor) controlService(name string, cmd string) error {
-	filename := PREFIX + name + SUFFIX
+	filename := fmt.Sprintf("%s.service", name)
 	var jobPath dbus.ObjectPath
 	return m.obj.Call("org.freedesktop.systemd1.Manager."+cmd, 0, filename, "replace").Store(&jobPath)
+}
+
+func serviceName(filename string) string {
+	s, _ := strings.CutSuffix(filename, ".service")
+	return s
 }
 
 func status(u dbusUnit) UnitStatus {
@@ -118,20 +148,4 @@ func status(u dbusUnit) UnitStatus {
 		return Crashed
 	}
 	return Stopped
-}
-
-// The mist format for service files is:
-//		mistservice_<name>.service
-
-const PREFIX = "mistservice_"
-const SUFFIX = ".service"
-
-func isMistFormat(filename string) bool {
-	return strings.HasPrefix(filename, PREFIX) && strings.HasSuffix(filename, SUFFIX)
-}
-
-func serviceName(filename string) string {
-	s, _ := strings.CutPrefix(filename, PREFIX)
-	s, _ = strings.CutSuffix(s, SUFFIX)
-	return s
 }
