@@ -1,5 +1,7 @@
 github.com/echo-webkom/cenv v1.12.1 h1:Lzr9s8NzDq63TiRTEBYHMJRZ+l2Iq0GTPI/GIjznCaE=
 github.com/echo-webkom/cenv v1.12.1/go.mod h1:qCDFjnypg03McDVq+xBfQKnAAa5FAOI9F4RuTPau7sA=
+github.com/go-chi/chi/v5 v5.2.1 h1:KOIHODQj58PmL80G2Eak4WdvUzjSJSm0vG72crDCqb8=
+github.com/go-chi/chi/v5 v5.2.1/go.mod h1:L2yAIGWB3H+phAw1NxKwWM+7eUH/lU8pOMm5hHcoops=
 github.com/godbus/dbus v4.1.0+incompatible h1:WqqLRTsQic3apZUK9qC5sGNfXthmPXzUZ7nQPrNITa4=
 github.com/godbus/dbus v4.1.0+incompatible/go.mod h1:/YcGZj5zSblfDWMMoOzV4fas9FZnQYTkDnsGvmh2Grw=
 github.com/jesperkha/gokenizer v1.1.1 h1:ZCKrsPBQqcXvCcMfL7kEPTDCCU1iinRtTqpF0koADe0=

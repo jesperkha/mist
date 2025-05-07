@@ -9,22 +9,18 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/jesperkha/mist/config"
 	"github.com/jesperkha/mist/database"
-	"github.com/jesperkha/mist/server"
-	"github.com/jesperkha/notifier"
 )
 
 type Proxy struct {
-	s *server.Server
+	r *chi.Mux
 }
 
 func New(config *config.Config) *Proxy {
-	s := server.New(config)
-	s.Use(server.Logger)
-
 	return &Proxy{
-		s: s,
+		r: chi.NewRouter(),
 	}
 }
 
@@ -45,8 +41,8 @@ func (p *Proxy) RegisterService(s database.Service) {
 	p.register(s)
 }
 
-func (p *Proxy) ListenAndServe(notif *notifier.Notifier) {
-	p.s.ListenAndServe(notif)
+func (p *Proxy) Router() *chi.Mux {
+	return p.r
 }
 
 func (p *Proxy) register(service database.Service) {
@@ -57,25 +53,22 @@ func (p *Proxy) register(service database.Service) {
 
 	endpoint := "/" + service.Name
 
-	p.s.Handle(endpoint, func(ctx *server.Context) int {
-		redirectTo(ctx.R.URL, url)
+	p.r.Handle(endpoint, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		redirectTo(r.URL, url)
 
-		res, err := http.DefaultTransport.RoundTrip(ctx.R)
+		res, err := http.DefaultTransport.RoundTrip(r)
 		if err != nil {
 			log.Println(err)
-			return http.StatusInternalServerError
 		}
 
 		defer res.Body.Close()
 
-		if _, err := io.Copy(ctx.W, res.Body); err != nil {
+		if _, err := io.Copy(w, res.Body); err != nil {
 			log.Println(err)
-			return http.StatusInternalServerError
 		}
 
-		maps.Copy(ctx.W.Header(), res.Header)
-		return res.StatusCode
-	})
+		maps.Copy(w.Header(), res.Header)
+	}))
 }
 
 func serviceUrl(port string) string {

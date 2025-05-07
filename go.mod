@@ -16,6 +16,7 @@ require (
 )
 
 require (
+	github.com/go-chi/chi/v5 v5.2.1
 	github.com/godbus/dbus v4.1.0+incompatible
 	github.com/jesperkha/gokenizer v1.1.1 // indirect
 	github.com/jesperkha/notifier v1.0.0

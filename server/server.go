@@ -5,50 +5,39 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/jesperkha/mist/config"
+	"github.com/jesperkha/mist/database"
+	"github.com/jesperkha/mist/proxy"
 	"github.com/jesperkha/notifier"
 )
 
 type Server struct {
-	mux    *http.ServeMux
+	mux    *chi.Mux
 	config *config.Config
-	h      http.Handler
+	db     *database.Database
 }
 
-// Handler takes in a Context with the request and response writer, and
-// returns the status code after handling the request.
-type Handler func(ctx *Context) int
+func New(config *config.Config, db *database.Database) *Server {
+	mux := chi.NewMux()
 
-func New(config *config.Config) *Server {
-	mux := http.NewServeMux()
-	s := &Server{
-		mux:    mux,
-		config: config,
-		h:      mux,
+	p := proxy.New(config)
+	if err := p.RegisterServices(db); err != nil {
+		log.Fatal(err)
 	}
 
-	return s
-}
-
-// Handle endpoint with handler wrapped with given middlewares.
-func (s *Server) Handle(pattern string, handler Handler, middlewares ...Middleware) {
-	hf := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := &Context{W: w, R: r}
-		code := handler(ctx)
-
-		if code != http.StatusOK {
-			w.WriteHeader(code)
-		}
+	p.RegisterService(database.Service{
+		Name: "foo",
+		Port: "5500",
 	})
 
-	h := http.Handler(hf) // Cast handler
+	mux.Mount("/", p.Router())
 
-	// Wrap middlewares
-	for _, m := range middlewares {
-		h = m(h)
+	return &Server{
+		mux:    mux,
+		config: config,
+		db:     db,
 	}
-
-	s.mux.Handle(pattern, h)
 }
 
 func (s *Server) ListenAndServe(notif *notifier.Notifier) {
@@ -56,7 +45,7 @@ func (s *Server) ListenAndServe(notif *notifier.Notifier) {
 
 	server := &http.Server{
 		Addr:    s.config.Port,
-		Handler: s.h,
+		Handler: s.mux,
 	}
 
 	go func() {
@@ -71,8 +60,4 @@ func (s *Server) ListenAndServe(notif *notifier.Notifier) {
 	if err := server.ListenAndServe(); err != http.ErrServerClosed {
 		log.Println(err)
 	}
-}
-
-func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	s.h.ServeHTTP(w, r)
 }
