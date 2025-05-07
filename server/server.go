@@ -8,7 +8,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jesperkha/mist/config"
 	"github.com/jesperkha/mist/database"
-	"github.com/jesperkha/mist/proxy"
 	"github.com/jesperkha/notifier"
 )
 
@@ -21,17 +20,8 @@ type Server struct {
 func New(config *config.Config, db *database.Database) *Server {
 	mux := chi.NewMux()
 
-	p := proxy.New(config)
-	if err := p.RegisterServices(db); err != nil {
-		log.Fatal(err)
-	}
-
-	p.RegisterService(database.Service{
-		Name: "foo",
-		Port: "5500",
-	})
-
-	mux.Mount("/", p.Router())
+	mux.Mount("/", proxyHandler(config, db))
+	mux.Mount("/service", serviceHandler(config, db))
 
 	return &Server{
 		mux:    mux,
