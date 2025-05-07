@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/jesperkha/mist/config"
 	"github.com/jesperkha/mist/database"
 )
 
@@ -18,7 +17,7 @@ type Proxy struct {
 	r *chi.Mux
 }
 
-func New(config *config.Config) *Proxy {
+func New() *Proxy {
 	return &Proxy{
 		r: chi.NewRouter(),
 	}
@@ -35,10 +34,6 @@ func (p *Proxy) RegisterServices(db *database.Database) error {
 	}
 
 	return nil
-}
-
-func (p *Proxy) RegisterService(s database.Service) {
-	p.register(s)
 }
 
 func (p *Proxy) Router() *chi.Mux {

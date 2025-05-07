@@ -10,13 +10,15 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/jesperkha/mist/config"
 	"github.com/jesperkha/mist/database"
+	"github.com/jesperkha/mist/service"
 	"github.com/jesperkha/notifier"
 )
 
 type Server struct {
-	mux    *chi.Mux
-	config *config.Config
-	db     *database.Database
+	mux     *chi.Mux
+	config  *config.Config
+	db      *database.Database
+	cleanup func()
 }
 
 func New(config *config.Config, db *database.Database) *Server {
@@ -30,13 +32,20 @@ func New(config *config.Config, db *database.Database) *Server {
 		AllowCredentials: true,
 	}))
 
-	mux.Mount("/", proxyHandler(config, db))
-	mux.Mount("/service", serviceHandler(config, db))
+	monitor := service.NewMonitor(db)
+
+	mux.Mount("/", proxyHandler(db))
+	mux.Mount("/service", serviceHandler(monitor))
+
+	cleanup := func() {
+		monitor.CloseConn()
+	}
 
 	return &Server{
-		mux:    mux,
-		config: config,
-		db:     db,
+		mux:     mux,
+		config:  config,
+		db:      db,
+		cleanup: cleanup,
 	}
 }
 
@@ -53,6 +62,8 @@ func (s *Server) ListenAndServe(notif *notifier.Notifier) {
 		if err := server.Shutdown(context.Background()); err != nil {
 			log.Println(err)
 		}
+
+		s.cleanup()
 		finish()
 	}()
 
