@@ -5,7 +5,9 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/cors"
 	"github.com/jesperkha/mist/config"
 	"github.com/jesperkha/mist/database"
 	"github.com/jesperkha/notifier"
@@ -19,6 +21,14 @@ type Server struct {
 
 func New(config *config.Config, db *database.Database) *Server {
 	mux := chi.NewMux()
+
+	mux.Use(middleware.Logger)
+	mux.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"https://*", "http://*"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type"},
+		AllowCredentials: true,
+	}))
 
 	mux.Mount("/", proxyHandler(config, db))
 	mux.Mount("/service", serviceHandler(config, db))
