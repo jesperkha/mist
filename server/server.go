@@ -35,7 +35,8 @@ func New(config *config.Config, db *database.Database) *Server {
 	monitor := service.NewMonitor(db)
 
 	mux.Mount("/", proxyHandler(db))
-	mux.Mount("/service", serviceHandler(monitor))
+	mux.Mount("/service", serviceHandler(config, monitor))
+	mux.Mount("/auth", authHandler(config))
 
 	cleanup := func() {
 		monitor.CloseConn()

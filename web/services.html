@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Units</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-8">
+    <div class="max-w-5xl mx-auto">
+        <h1 class="text-3xl font-bold mb-6">Services</h1>
+        <table class="min-w-full bg-white rounded-lg shadow-md">
+            <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+                <tr>
+                    <th class="py-3 px-6 text-left">ID</th>
+                    <th class="py-3 px-6 text-left">Name</th>
+                    <th class="py-3 px-6 text-left">Description</th>
+                    <th class="py-3 px-6 text-left">Port</th>
+                    <th class="py-3 px-6 text-left">Status</th>
+                </tr>
+            </thead>
+            <tbody class="text-gray-700 text-sm font-light">
+                {{range .}}
+                <tr class="border-b border-gray-200">
+                    <td class="py-3 px-6">{{.ID}}</td>
+                    <td class="py-3 px-6">{{.Name}}</td>
+                    <td class="py-3 px-6">{{.Description}}</td>
+                    <td class="py-3 px-6">{{.Port}}</td>
+                    <td class="py-3 px-6 "><span class="status-badge px-4 py-1 rounded-full">{{.Status}}</span></td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+    <script>
+    document.querySelectorAll('.status-badge').forEach(el => {
+        const status = el.textContent.trim().toLowerCase();
+        switch (status) {
+            case 'running':
+                el.classList.add('bg-green-200', 'text-green-800');
+                break;
+            case 'stopped':
+                el.classList.add('bg-yellow-200', 'text-yellow-800');
+                break;
+            case 'crashed':
+                el.classList.add('bg-red-200', 'text-red-800');
+                break;
+            default:
+                el.classList.add('bg-gray-200', 'text-gray-800');
+        }
+    });
+    </script>
+</body>
+</html>

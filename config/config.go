@@ -10,6 +10,7 @@ import (
 type Config struct {
 	Port   string
 	BDPath string
+	Secret string
 }
 
 func Load() *Config {
@@ -20,6 +21,7 @@ func Load() *Config {
 	return &Config{
 		Port:   toGoPort(os.Getenv("PORT")),
 		BDPath: os.Getenv("DB_PATH"),
+		Secret: os.Getenv("SECRET"),
 	}
 }
 

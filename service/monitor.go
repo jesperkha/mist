@@ -39,7 +39,7 @@ func (m *Monitor) Poll() (units []Unit, err error) {
 		return units, err
 	}
 
-	regServices, err := m.regServiceMap()
+	services, err := m.regServiceMap()
 	if err != nil {
 		return units, err
 	}
@@ -47,15 +47,19 @@ func (m *Monitor) Poll() (units []Unit, err error) {
 	for _, u := range allUnits {
 		name := serviceName(u.Name)
 
-		if id, ok := regServices[name]; ok {
-			units = append(units, Unit{
-				ID:          id,
-				Name:        name,
-				Filename:    u.Name,
-				Description: u.Description,
+		if s, ok := services[name]; ok {
+			services[name] = Unit{
+				ID:          s.ID,
+				Name:        s.Name,
+				Description: s.Description,
+				Port:        cleanPort(s.Port),
 				Status:      status(u),
-			})
+			}
 		}
+	}
+
+	for _, s := range services {
+		units = append(units, s)
 	}
 
 	return units, err
@@ -73,8 +77,8 @@ func (m *Monitor) StopService(name string) error {
 	return m.controlService(name, "StopUnit")
 }
 
-func (m *Monitor) regServiceMap() (map[string]uint, error) {
-	services := make(map[string]uint)
+func (m *Monitor) regServiceMap() (map[string]Unit, error) {
+	services := make(map[string]Unit)
 
 	all, err := m.db.GetAllServices()
 	if err != nil {
@@ -82,10 +86,21 @@ func (m *Monitor) regServiceMap() (map[string]uint, error) {
 	}
 
 	for _, s := range all {
-		services[s.Name] = s.ID
+		services[s.Name] = Unit{
+			ID:          s.ID,
+			Name:        s.Name,
+			Description: s.Description,
+			Port:        cleanPort(s.Port),
+			Status:      Stopped,
+		}
 	}
 
 	return services, nil
+}
+
+func cleanPort(port string) string {
+	s, _ := strings.CutPrefix(port, ":")
+	return s
 }
 
 // cmd is either StartUnit or StopUnit

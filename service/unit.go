@@ -3,11 +3,11 @@ package service
 import "github.com/godbus/dbus"
 
 type Unit struct {
-	ID          uint       `json:"id"`       // Same as in database
-	Filename    string     `json:"filename"` // Full file name
-	Name        string     `json:"name"`     // Just the service name
+	ID          uint       `json:"id"`   // Same as in database
+	Name        string     `json:"name"` // Just the service name
 	Description string     `json:"description"`
 	Status      UnitStatus `json:"status"`
+	Port        string     `json:"port"`
 }
 
 type UnitStatus int
