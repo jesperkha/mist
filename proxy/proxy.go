@@ -54,12 +54,15 @@ func (p *Proxy) register(service database.Service) {
 		res, err := http.DefaultTransport.RoundTrip(r)
 		if err != nil {
 			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
 		}
 
 		defer res.Body.Close()
 
 		if _, err := io.Copy(w, res.Body); err != nil {
 			log.Println(err)
+			return
 		}
 
 		maps.Copy(w.Header(), res.Header)
