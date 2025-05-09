@@ -1,13 +1,13 @@
 package service
 
-import "github.com/godbus/dbus"
+import (
+	"github.com/godbus/dbus"
+	"github.com/jesperkha/mist/database"
+)
 
 type Unit struct {
-	ID          uint       `json:"id"`   // Same as in database
-	Name        string     `json:"name"` // Just the service name
-	Description string     `json:"description"`
-	Status      UnitStatus `json:"status"`
-	Port        string     `json:"port"`
+	database.Service
+	Status UnitStatus `json:"status"`
 }
 
 type UnitStatus int

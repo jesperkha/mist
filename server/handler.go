@@ -7,6 +7,8 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jesperkha/mist/config"
@@ -24,9 +26,8 @@ func proxyHandler(db *database.Database) http.Handler {
 	return p.Router()
 }
 
-func serviceHandler(config *config.Config, monitor *service.Monitor) http.Handler {
+func dashboardHandler(config *config.Config, monitor *service.Monitor) http.Handler {
 	mux := chi.NewMux()
-
 	mux.Use(requireAuth(config))
 
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
@@ -82,21 +83,92 @@ func authHandler(config *config.Config) http.Handler {
 	return mux
 }
 
+func serviceHandler(config *config.Config, db *database.Database, monitor *service.Monitor) http.Handler {
+	mux := chi.NewMux()
+	// mux.Use(requireAuth(config))
+
+	// Get all services
+	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+		all, err := monitor.Poll()
+		if err != nil {
+			http.Error(w, "failed to poll", http.StatusInternalServerError)
+			return
+		}
+
+		if err := JSON(w, all); err != nil {
+			http.Error(w, "failed to write json", http.StatusInternalServerError)
+		}
+	})
+
+	// Get service by ID
+	mux.HandleFunc("GET /{id}", func(w http.ResponseWriter, r *http.Request) {
+		idStr := r.PathValue("id")
+		if idStr == "" {
+			http.Error(w, "missing id field", http.StatusBadRequest)
+			return
+		}
+
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			http.Error(w, "bad id", http.StatusBadRequest)
+			return
+		}
+
+		s, err := db.GetServiceByID(uint(id))
+		if err != nil {
+			http.Error(w, "no service by that id", http.StatusNotFound)
+			return
+		}
+
+		if err := JSON(w, s); err != nil {
+			http.Error(w, "failed to write json", http.StatusInternalServerError)
+		}
+	})
+
+	// Register new service
+	mux.HandleFunc("POST /", func(w http.ResponseWriter, r *http.Request) {
+
+	})
+
+	// Update existing service
+	mux.HandleFunc("PUT /{id}", func(w http.ResponseWriter, r *http.Request) {
+
+	})
+
+	return mux
+}
+
 func requireAuth(config *config.Config) func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			cookie, err := r.Cookie("AuthToken")
 
-			if err != nil || cookie.Value != config.Secret {
-				log.Println("directing to auth")
-				redirect := fmt.Sprintf("/auth?origin=%s", r.URL.Path)
-				http.Redirect(w, r, redirect, http.StatusSeeOther)
+			if err == nil && cookie.Value == config.Secret {
+				h.ServeHTTP(w, r)
 				return
 			}
 
-			h.ServeHTTP(w, r)
+			if isBrowserRequest(r) {
+				redirect := fmt.Sprintf("/auth?origin=%s", r.URL.Path)
+				http.Redirect(w, r, redirect, http.StatusSeeOther)
+			} else {
+				http.Error(w, "unauthorized", http.StatusUnauthorized)
+			}
 		})
 	}
+}
+
+func isBrowserRequest(r *http.Request) bool {
+	userAgent := r.Header.Get("User-Agent")
+	accept := r.Header.Get("Accept")
+
+	isUA := strings.Contains(userAgent, "Mozilla") ||
+		strings.Contains(userAgent, "Chrome") ||
+		strings.Contains(userAgent, "Safari") ||
+		strings.Contains(userAgent, "Firefox")
+
+	isAcceptsHTML := strings.Contains(accept, "text/html")
+	return isUA || isAcceptsHTML
 }
 
 func JSON(w http.ResponseWriter, v any) error {
@@ -105,7 +177,7 @@ func JSON(w http.ResponseWriter, v any) error {
 		return err
 	}
 
-	w.Write(b)
 	w.Header().Add("Content-Type", "application/json")
-	return nil
+	_, err = w.Write(b)
+	return err
 }

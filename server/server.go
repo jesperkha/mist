@@ -34,8 +34,13 @@ func New(config *config.Config, db *database.Database) *Server {
 
 	monitor := service.NewMonitor(db)
 
+	// Default routing through proxy
 	mux.Mount("/", proxyHandler(db))
-	mux.Mount("/service", serviceHandler(config, monitor))
+	// User interface for db and services
+	mux.Mount("/dashboard", dashboardHandler(config, monitor))
+	// Service API for other apps and dashboard
+	mux.Mount("/service", serviceHandler(config, db, monitor))
+	// Auth for API and dashboard
 	mux.Mount("/auth", authHandler(config))
 
 	cleanup := func() {

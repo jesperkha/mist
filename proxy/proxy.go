@@ -70,9 +70,10 @@ func (p *Proxy) register(service database.Service) {
 }
 
 func serviceUrl(port string) string {
-	if port[0] != ':' {
+	if !strings.HasPrefix(port, ":") {
 		port = ":" + port
 	}
+
 	return fmt.Sprintf("http://127.0.0.1%s", port)
 }
 

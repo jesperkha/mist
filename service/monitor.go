@@ -36,30 +36,30 @@ func (m *Monitor) CloseConn() error {
 func (m *Monitor) Poll() (units []Unit, err error) {
 	var allUnits []dbusUnit
 	if err := m.obj.Call("org.freedesktop.systemd1.Manager.ListUnits", 0).Store(&allUnits); err != nil {
-		return units, err
+		return nil, err
 	}
 
-	services, err := m.regServiceMap()
-	if err != nil {
-		return units, err
-	}
-
+	unitMap := make(map[string]dbusUnit)
 	for _, u := range allUnits {
 		name := serviceName(u.Name)
+		unitMap[name] = u
+	}
 
-		if s, ok := services[name]; ok {
-			services[name] = Unit{
-				ID:          s.ID,
-				Name:        s.Name,
-				Description: s.Description,
-				Port:        cleanPort(s.Port),
-				Status:      status(u),
-			}
-		}
+	services, err := m.db.GetAllServices()
+	if err != nil {
+		return nil, err
 	}
 
 	for _, s := range services {
-		units = append(units, s)
+		stat := Stopped
+		if unit, ok := unitMap[s.Name]; ok {
+			stat = status(unit)
+		}
+
+		units = append(units, Unit{
+			Service: s,
+			Status:  stat,
+		})
 	}
 
 	return units, err
@@ -75,32 +75,6 @@ func (m *Monitor) StartService(name string) error {
 // Requires root permissions.
 func (m *Monitor) StopService(name string) error {
 	return m.controlService(name, "StopUnit")
-}
-
-func (m *Monitor) regServiceMap() (map[string]Unit, error) {
-	services := make(map[string]Unit)
-
-	all, err := m.db.GetAllServices()
-	if err != nil {
-		return nil, err
-	}
-
-	for _, s := range all {
-		services[s.Name] = Unit{
-			ID:          s.ID,
-			Name:        s.Name,
-			Description: s.Description,
-			Port:        cleanPort(s.Port),
-			Status:      Stopped,
-		}
-	}
-
-	return services, nil
-}
-
-func cleanPort(port string) string {
-	s, _ := strings.CutPrefix(port, ":")
-	return s
 }
 
 // cmd is either StartUnit or StopUnit
