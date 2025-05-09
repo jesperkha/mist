@@ -134,8 +134,6 @@ func serviceHandler(config *config.Config, db *database.Database, monitor *servi
 			return
 		}
 
-		log.Println(string(body))
-
 		var s database.Service
 		if err := json.Unmarshal(body, &s); err != nil || !ensureService(s) {
 			http.Error(w, "bad data", http.StatusBadRequest)

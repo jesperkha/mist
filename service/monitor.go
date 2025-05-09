@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"log"
+	"os"
 	"strings"
 
 	"github.com/godbus/dbus"
@@ -56,6 +57,11 @@ func (m *Monitor) Poll() (units []Unit, err error) {
 			stat = status(unit)
 		}
 
+		path := fmt.Sprintf("/etc/systemd/system/%s.service", s.Name)
+		if !fileExists(path) {
+			stat = NoFile
+		}
+
 		units = append(units, Unit{
 			Service: s,
 			Status:  stat,
@@ -63,6 +69,11 @@ func (m *Monitor) Poll() (units []Unit, err error) {
 	}
 
 	return units, err
+}
+
+func fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil || !os.IsNotExist(err)
 }
 
 // StartService takes a plain servie name (Unit.Name) and queries systemd to start it.
