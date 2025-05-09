@@ -1,4 +1,4 @@
-package proxy
+package server
 
 import (
 	"fmt"
@@ -10,45 +10,39 @@ import (
 	"strings"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/jesperkha/mist/config"
 	"github.com/jesperkha/mist/database"
 )
 
-type Proxy struct {
-	r *chi.Mux
-}
+func newProxyRouter(config *config.Config, db *database.Database) (*chi.Mux, error) {
+	mux := chi.NewMux()
 
-func New() *Proxy {
-	return &Proxy{
-		r: chi.NewRouter(),
-	}
-}
-
-func (p *Proxy) RegisterServices(db *database.Database) error {
 	all, err := db.GetAllServices()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	for _, s := range all {
-		p.register(s)
+		endpoint := "/" + s.Name
+		handler := makeProxyHandler(s)
+
+		if s.RequireAuth {
+			handler = requireAuth(config)(handler)
+		}
+
+		mux.Handle(endpoint, handler)
 	}
 
-	return nil
+	return mux, nil
 }
 
-func (p *Proxy) Router() *chi.Mux {
-	return p.r
-}
-
-func (p *Proxy) register(service database.Service) {
+func makeProxyHandler(service database.Service) http.Handler {
 	url, err := url.Parse(serviceUrl(service.Port))
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	endpoint := "/" + service.Name
-
-	p.r.Handle(endpoint, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		redirectTo(r.URL, url)
 
 		res, err := http.DefaultTransport.RoundTrip(r)
@@ -66,7 +60,7 @@ func (p *Proxy) register(service database.Service) {
 		}
 
 		maps.Copy(w.Header(), res.Header)
-	}))
+	})
 }
 
 func serviceUrl(port string) string {

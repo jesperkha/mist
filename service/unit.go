@@ -16,6 +16,7 @@ const (
 	Stopped UnitStatus = iota
 	Running
 	Crashed
+	NoFile
 )
 
 func (s UnitStatus) String() string {
@@ -23,6 +24,7 @@ func (s UnitStatus) String() string {
 		Stopped: "stopped",
 		Running: "running",
 		Crashed: "crashed",
+		NoFile:  "no file",
 	}[s]
 }
 

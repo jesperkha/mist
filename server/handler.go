@@ -14,17 +14,16 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jesperkha/mist/config"
 	"github.com/jesperkha/mist/database"
-	"github.com/jesperkha/mist/proxy"
 	"github.com/jesperkha/mist/service"
 )
 
-func proxyHandler(db *database.Database) http.Handler {
-	p := proxy.New()
-	if err := p.RegisterServices(db); err != nil {
+func proxyHandler(config *config.Config, db *database.Database) http.Handler {
+	mux, err := newProxyRouter(config, db)
+	if err != nil {
 		log.Fatal(err)
 	}
 
-	return p.Router()
+	return mux
 }
 
 func dashboardHandler(config *config.Config, monitor *service.Monitor) http.Handler {
@@ -134,6 +133,8 @@ func serviceHandler(config *config.Config, db *database.Database, monitor *servi
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
+
+		log.Println(string(body))
 
 		var s database.Service
 		if err := json.Unmarshal(body, &s); err != nil || !ensureService(s) {

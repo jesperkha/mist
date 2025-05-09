@@ -18,22 +18,24 @@
         <table class="min-w-full bg-white rounded-lg shadow-md">
             <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
                 <tr>
-                    <th class="py-3 px-6 text-left">ID</th>
-                    <th class="py-3 px-6 text-left">Name</th>
-                    <th class="py-3 px-6 text-left">Description</th>
-                    <th class="py-3 px-6 text-left">Port</th>
-                    <th class="py-3 px-6 text-left">Status</th>
+                    <th class="py-3 px-3 text-left">ID</th>
+                    <th class="py-3 px-3 text-left">Name</th>
+                    <th class="py-3 px-3 text-left">Description</th>
+                    <th class="py-3 px-3 text-left">Port</th>
+                    <th class="py-3 px-3 text-left">Auth</th>
+                    <th class="py-3 px-3 text-left">Status</th>
                     <th class="py-3 text-left"></th>
                 </tr>
             </thead>
             <tbody class="text-gray-700 text-sm font-light">
                 {{range .}}
                 <tr class="border-b border-gray-200">
-                    <td class="py-3 px-6">{{.ID}}</td>
-                    <td class="py-3 px-6">{{.Name}}</td>
-                    <td class="py-3 px-6">{{.Description}}</td>
-                    <td class="py-3 px-6">{{.Port}}</td>
-                    <td class="py-3 px-6"><span class="status-badge px-4 py-1 rounded-full">{{.Status}}</span></td>
+                    <td class="py-3 px-3">{{.ID}}</td>
+                    <td class="py-3 px-3">{{.Name}}</td>
+                    <td class="py-3 px-3">{{.Description}}</td>
+                    <td class="py-3 px-3">{{.Port}}</td>
+                    <td class="py-3 px-3">{{.RequireAuth}}</td>
+                    <td class="py-3 px-3"><span class="status-badge px-4 py-1 rounded-full">{{.Status}}</span></td>
                     <td class="py-3 text-red-500 cursor-pointer hover:text-red-800" onclick="deleteService('{{.ID}}')">delete</td>
                 </tr>
                 {{end}}
@@ -57,6 +59,10 @@
                 <div>
                     <label class="block text-sm font-medium">Port</label>
                     <input type="number" name="port" required class="w-full border border-gray-300 rounded px-3 py-2">
+                </div>
+                <div class="flex items-center space-x-4">
+                    <label class="text-sm font-medium">Require authentication</label>
+                    <input type="checkbox" name="auth" class="transform scale-125 accent-blue-600">
                 </div>
                 <div class="flex justify-end space-x-2 pt-4">
                     <button type="button" id="cancelDialog" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancel</button>
@@ -90,6 +96,7 @@
             name: form.name.value.trim(),
             description: form.description.value.trim(),
             port: form.port.value.trim(),
+            requireAuth: form.auth.value == "on" ? true : false,
         };
 
         const response = await fetch('/service', {
