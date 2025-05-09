@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -85,7 +86,7 @@ func authHandler(config *config.Config) http.Handler {
 
 func serviceHandler(config *config.Config, db *database.Database, monitor *service.Monitor) http.Handler {
 	mux := chi.NewMux()
-	// mux.Use(requireAuth(config))
+	mux.Use(requireAuth(config))
 
 	// Get all services
 	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
@@ -104,7 +105,7 @@ func serviceHandler(config *config.Config, db *database.Database, monitor *servi
 	mux.HandleFunc("GET /{id}", func(w http.ResponseWriter, r *http.Request) {
 		idStr := r.PathValue("id")
 		if idStr == "" {
-			http.Error(w, "missing id field", http.StatusBadRequest)
+			http.Error(w, "missing id", http.StatusBadRequest)
 			return
 		}
 
@@ -125,25 +126,76 @@ func serviceHandler(config *config.Config, db *database.Database, monitor *servi
 		}
 	})
 
-	// Register new service
+	// Register new service from request body. Must be valid database.Service
+	// object. Responds with new services id on success.
 	mux.HandleFunc("POST /", func(w http.ResponseWriter, r *http.Request) {
+		body, err := io.ReadAll(r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 
+		var s database.Service
+		if err := json.Unmarshal(body, &s); err != nil || !ensureService(s) {
+			http.Error(w, "bad data", http.StatusBadRequest)
+			return
+		}
+
+		id, err := db.NewService(s)
+		if err != nil {
+			http.Error(w, "db error", http.StatusInternalServerError)
+			return
+		}
+
+		w.Header().Add("Conent-Type", "text")
+		w.Write(fmt.Appendf(nil, "%d", id))
 	})
 
-	// Update existing service
-	mux.HandleFunc("PUT /{id}", func(w http.ResponseWriter, r *http.Request) {
+	// Delete service
+	mux.HandleFunc("DELETE /{id}", func(w http.ResponseWriter, r *http.Request) {
+		idStr := r.PathValue("id")
+		if idStr == "" {
+			http.Error(w, "missing id", http.StatusBadRequest)
+			return
+		}
 
+		id, err := strconv.Atoi(idStr)
+		if err != nil {
+			http.Error(w, "bad id", http.StatusBadRequest)
+			return
+		}
+
+		if err := db.RemoveService(uint(id)); err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
 	})
 
 	return mux
 }
 
+func ensureService(s database.Service) bool {
+	if _, err := strconv.Atoi(s.Port); err != nil {
+		return false
+	}
+	return s.Name != "" && s.Port != ""
+}
+
 func requireAuth(config *config.Config) func(http.Handler) http.Handler {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// For browser clients
 			cookie, err := r.Cookie("AuthToken")
-
 			if err == nil && cookie.Value == config.Secret {
+				h.ServeHTTP(w, r)
+				return
+			}
+
+			// For API clients
+			hdr := r.Header.Get("Authorization")
+			if hdr == config.Secret {
 				h.ServeHTTP(w, r)
 				return
 			}
