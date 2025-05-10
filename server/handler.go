@@ -146,6 +146,8 @@ func serviceHandler(config *config.Config, db *database.Database, monitor *servi
 			return
 		}
 
+		addProxyHandler(config, s)
+
 		w.Header().Add("Conent-Type", "text")
 		w.Write(fmt.Appendf(nil, "%d", id))
 	})
@@ -164,7 +166,15 @@ func serviceHandler(config *config.Config, db *database.Database, monitor *servi
 			return
 		}
 
-		if err := db.RemoveService(uint(id)); err != nil {
+		s, err := db.GetServiceByID(uint(id))
+		if err != nil {
+			http.Error(w, "no service with id", http.StatusBadRequest)
+			return
+		}
+
+		removeProxyHandler(s)
+
+		if err := db.RemoveService(s.ID); err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}

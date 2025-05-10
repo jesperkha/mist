@@ -14,7 +14,11 @@ import (
 	"github.com/jesperkha/mist/database"
 )
 
+// Global map of proxy handler with the service name as key.
+var proxyHandlers map[string]http.Handler
+
 func newProxyRouter(config *config.Config, db *database.Database) (*chi.Mux, error) {
+	proxyHandlers = make(map[string]http.Handler)
 	mux := chi.NewMux()
 
 	all, err := db.GetAllServices()
@@ -23,17 +27,42 @@ func newProxyRouter(config *config.Config, db *database.Database) (*chi.Mux, err
 	}
 
 	for _, s := range all {
-		endpoint := "/" + s.Name
-		handler := makeProxyHandler(s)
-
-		if s.RequireAuth {
-			handler = requireAuth(config)(handler)
-		}
-
-		mux.Handle(endpoint, handler)
+		addProxyHandler(config, s)
 	}
 
+	mux.HandleFunc("/*", func(w http.ResponseWriter, r *http.Request) {
+		name := getFirstSegment(r)
+		if h, ok := proxyHandlers[name]; ok {
+			h.ServeHTTP(w, r)
+			return
+		}
+
+		w.WriteHeader(http.StatusNotFound)
+	})
+
 	return mux, nil
+}
+
+func getFirstSegment(r *http.Request) string {
+	path := strings.Trim(r.URL.Path, "/")
+	segments := strings.SplitN(path, "/", 2)
+	if len(segments) > 0 && segments[0] != "" {
+		return segments[0]
+	}
+	return ""
+}
+
+func addProxyHandler(config *config.Config, s database.Service) {
+	h := makeProxyHandler(s)
+	if s.RequireAuth {
+		h = requireAuth(config)(h)
+	}
+
+	proxyHandlers[s.Name] = h
+}
+
+func removeProxyHandler(s database.Service) {
+	delete(proxyHandlers, s.Name)
 }
 
 func makeProxyHandler(service database.Service) http.Handler {
