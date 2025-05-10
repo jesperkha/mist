@@ -8,7 +8,7 @@
 <body class="bg-gray-100 min-h-screen p-8">
     <div class="max-w-5xl mx-auto">
         <div class="flex justify-between items-center mb-3">
-            <h1 class="text-3xl font-bold">Services</h1>
+            <h1 class="text-2xl font-bold">Services</h1>
             <button id="openDialog" class="text-sm bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
                 New Service
             </button>
@@ -34,7 +34,7 @@
                     <td class="py-3 px-3">{{.Name}}</td>
                     <td class="py-3 px-3">{{.Description}}</td>
                     <td class="py-3 px-3">{{.Port}}</td>
-                    <td class="py-3 px-3">{{.RequireAuth}}</td>
+                    <td class="py-3 px-3 font-medium requireAuth">{{.RequireAuth}}</td>
                     <td class="py-3 px-3"><span class="status-badge px-4 py-1 rounded-full">{{.Status}}</span></td>
                     <td class="py-3 text-red-500 cursor-pointer hover:text-red-800" onclick="deleteService('{{.ID}}')">delete</td>
                 </tr>
@@ -85,6 +85,10 @@
         }
     }
 
+    for (const elem of document.getElementsByClassName("requireAuth")) {
+        elem.classList.add(elem.innerText == "true" ? "text-green-500" : "text-red-400");
+    }
+
     const dialog = document.getElementById('dialog');
     document.getElementById('openDialog').onclick = () => dialog.classList.remove('hidden');
     document.getElementById('cancelDialog').onclick = () => dialog.classList.add('hidden');
@@ -96,7 +100,7 @@
             name: form.name.value.trim(),
             description: form.description.value.trim(),
             port: form.port.value.trim(),
-            requireAuth: form.auth.value == "on" ? true : false,
+            requireAuth: form.auth.checked,
         };
 
         const response = await fetch('/service', {

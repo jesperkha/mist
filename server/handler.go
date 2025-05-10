@@ -37,7 +37,7 @@ func dashboardHandler(config *config.Config, monitor *service.Monitor) http.Hand
 			return
 		}
 
-		templ := template.Must(template.ParseFiles("web/services.html"))
+		templ := template.Must(template.ParseFiles("web/dashboard.html"))
 		templ.Execute(w, services)
 	})
 
