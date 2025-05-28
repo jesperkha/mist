@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"maps"
 	"net/http"
 	"net/url"
 	"strings"
@@ -16,6 +15,8 @@ import (
 
 // Global map of proxy handler with the service name as key.
 var proxyHandlers map[string]http.Handler
+
+const ctxCookieName = "Mist-Service-Context"
 
 func newProxyRouter(config *config.Config, db *database.Database) (*chi.Mux, error) {
 	proxyHandlers = make(map[string]http.Handler)
@@ -35,6 +36,13 @@ func newProxyRouter(config *config.Config, db *database.Database) (*chi.Mux, err
 		if h, ok := proxyHandlers[name]; ok {
 			h.ServeHTTP(w, r)
 			return
+		}
+
+		if cookie, err := r.Cookie(ctxCookieName); err == nil {
+			if h, ok := proxyHandlers[cookie.Value]; ok {
+				r.URL.Path = fmt.Sprintf("/%s%s", cookie.Value, r.URL.Path)
+				h.ServeHTTP(w, r)
+			}
 		}
 
 		w.WriteHeader(http.StatusNotFound)
@@ -74,6 +82,13 @@ func makeProxyHandler(service database.Service) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		redirectTo(r.URL, url)
 
+		if _, err := r.Cookie(ctxCookieName); err != nil {
+			http.SetCookie(w, &http.Cookie{
+				Name:  ctxCookieName,
+				Value: service.Name,
+			})
+		}
+
 		res, err := http.DefaultTransport.RoundTrip(r)
 		if err != nil {
 			log.Println(err)
@@ -83,12 +98,18 @@ func makeProxyHandler(service database.Service) http.Handler {
 
 		defer res.Body.Close()
 
+		for k, values := range res.Header {
+			for _, v := range values {
+				w.Header().Add(k, v)
+			}
+		}
+
+		w.WriteHeader(res.StatusCode)
+
 		if _, err := io.Copy(w, res.Body); err != nil {
 			log.Println(err)
 			return
 		}
-
-		maps.Copy(w.Header(), res.Header)
 	})
 }
 
