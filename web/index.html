@@ -3,13 +3,71 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>My app</title>
+		<title>Raspberry Pi</title>
 		<script src="https://unpkg.com/htmx.org@1.9.2"></script>
 		<script src="https://unpkg.com/htmx.org@1.9.2/dist/ext/methods.js"></script>
-		<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet" />
+		<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100..900;1,100..900&display=swap"
+			rel="stylesheet"
+		/>
 	</head>
-	<style></style>
+	<style>
+		* {
+			font-family: "Roboto", sans-serif;
+			font-optical-sizing: auto;
+			font-style: normal;
+			font-variation-settings: "wdth" 100;
+		}
+	</style>
 	<body>
-		<p class="text-xl">Hello world!</p>
+		<div class="w-full h-[100vh] flex items-center justify-center">
+			<div class="w-[80vw] max-w-[350px] flex flex-col gap-8">
+				<p class="text-xl font-bold text-center">Services</p>
+
+				<div class="grid grid-rows-3 grid-cols-3 gap-4 font-light bg-gray-100 rounded-2xl shadow p-6">
+					<a href="/dashboard" class="flex items-center justify-center flex-col gap-1">
+						<div
+							class="w-[50px] h-[50px] bg-pink-500 rounded-2xl shadow flex items-center justify-center text-slate-100"
+						>
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M5 9V7H7V9H5Z" fill="currentColor" />
+								<path d="M9 9H19V7H9V9Z" fill="currentColor" />
+								<path d="M5 15V17H7V15H5Z" fill="currentColor" />
+								<path d="M19 17H9V15H19V17Z" fill="currentColor" />
+								<path
+									fill-rule="evenodd"
+									clip-rule="evenodd"
+									d="M1 6C1 4.34315 2.34315 3 4 3H20C21.6569 3 23 4.34315 23 6V18C23 19.6569 21.6569 21 20 21H4C2.34315 21 1 19.6569 1 18V6ZM4 5H20C20.5523 5 21 5.44772 21 6V11H3V6C3 5.44772 3.44772 5 4 5ZM3 13V18C3 18.5523 3.44772 19 4 19H20C20.5523 19 21 18.5523 21 18V13H3Z"
+									fill="currentColor"
+								/>
+							</svg>
+						</div>
+						<p class="text-sm text-center">Dashboard</p>
+					</a>
+
+					<a href="/loshare" class="flex items-center justify-center flex-col gap-1">
+						<div
+							class="w-[50px] h-[50px] bg-blue-500 rounded-2xl shadow flex items-center justify-center text-slate-100"
+						>
+							<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+								<path d="M7 18H17V16H7V18Z" fill="currentColor" />
+								<path d="M17 14H7V12H17V14Z" fill="currentColor" />
+								<path d="M7 10H11V8H7V10Z" fill="currentColor" />
+								<path
+									fill-rule="evenodd"
+									clip-rule="evenodd"
+									d="M6 2C4.34315 2 3 3.34315 3 5V19C3 20.6569 4.34315 22 6 22H18C19.6569 22 21 20.6569 21 19V9C21 5.13401 17.866 2 14 2H6ZM6 4H13V9H19V19C19 19.5523 18.5523 20 18 20H6C5.44772 20 5 19.5523 5 19V5C5 4.44772 5.44772 4 6 4ZM15 4.10002C16.6113 4.4271 17.9413 5.52906 18.584 7H15V4.10002Z"
+									fill="currentColor"
+								/>
+							</svg>
+						</div>
+						<p class="text-sm text-center">Fileshare</p>
+					</a>
+				</div>
+			</div>
+		</div>
 	</body>
 </html>

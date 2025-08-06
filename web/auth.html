@@ -1,34 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Login</title>
-    <script src="https://unpkg.com/htmx.org@1.9.2"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="flex items-center justify-center h-screen bg-gray-100">
-    <form 
-        hx-post="{{.}}" 
-        hx-target="#response"
-        hx-swap="innerHTML"
-        class="bg-white p-6 rounded-lg shadow-md w-80"
-    >
-        <h2 class="text-2xl font-semibold mb-4 text-center">Authenticate</h2>
-        <input 
-            type="password" 
-            id="password" 
-            name="password" 
-            placeholder="Password"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
-            required
-        >
-        <button 
-            type="submit" 
-            class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition"
-        >
-            Log In
-        </button>
-        <div id="response" class="mt-4 text-center text-red-500"></div>
-    </form>
-</body>
+	<head>
+		<meta charset="UTF-8" />
+		<title>Login</title>
+		<script src="https://unpkg.com/htmx.org@1.9.2"></script>
+		<script src="https://cdn.tailwindcss.com"></script>
+	</head>
+	<body class="flex items-center justify-center h-screen bg-gray-100">
+		<form hx-post="{{.}}" hx-target="#response" hx-swap="innerHTML" class="bg-white p-6 rounded-lg shadow-md w-80">
+			<h2 class="text-2xl font-semibold mb-4 text-center">Authenticate</h2>
+			<input
+				type="password"
+				id="password"
+				name="password"
+				placeholder="Password"
+				class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+				required
+			/>
+			<button type="submit" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
+				Log In
+			</button>
+			<div id="response" class="mt-4 text-center text-red-500"></div>
+		</form>
+	</body>
 </html>

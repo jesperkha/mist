@@ -1,139 +1,143 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Units</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-</head>
-<body class="bg-gray-100 min-h-screen p-8">
-    <div class="max-w-5xl mx-auto">
-        <div class="flex justify-between items-center mb-3">
-            <h1 class="text-2xl font-bold">Services</h1>
-            <button id="openDialog" class="text-sm bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
-                New Service
-            </button>
-        </div>
+	<head>
+		<meta charset="UTF-8" />
+		<title>Units</title>
+		<script src="https://cdn.tailwindcss.com"></script>
+	</head>
+	<body class="bg-gray-100 min-h-screen p-8">
+		<div class="max-w-5xl mx-auto">
+			<div class="flex justify-between items-center mb-3">
+				<h1 class="text-2xl font-bold">Services</h1>
+				<button id="openDialog" class="text-sm bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+					New Service
+				</button>
+			</div>
 
-        <!-- Service Table -->
-        <table class="min-w-full bg-white rounded-lg shadow-md">
-            <thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
-                <tr>
-                    <th class="py-3 px-3 text-left">ID</th>
-                    <th class="py-3 px-3 text-left">Name</th>
-                    <th class="py-3 px-3 text-left">Description</th>
-                    <th class="py-3 px-3 text-left">Port</th>
-                    <th class="py-3 px-3 text-left">Auth</th>
-                    <th class="py-3 px-3 text-left">Status</th>
-                    <th class="py-3 text-left"></th>
-                </tr>
-            </thead>
-            <tbody class="text-gray-700 text-sm font-light">
-                {{range .}}
-                <tr class="border-b border-gray-200">
-                    <td class="py-3 px-3">{{.ID}}</td>
-                    <td class="py-3 px-3">{{.Name}}</td>
-                    <td class="py-3 px-3">{{.Description}}</td>
-                    <td class="py-3 px-3">{{.Port}}</td>
-                    <td class="py-3 px-3 font-medium requireAuth">{{.RequireAuth}}</td>
-                    <td class="py-3 px-3"><span class="status-badge px-4 py-1 rounded-full">{{.Status}}</span></td>
-                    <td class="py-3 text-red-500 cursor-pointer hover:text-red-800" onclick="deleteService('{{.ID}}')">delete</td>
-                </tr>
-                {{end}}
-            </tbody>
-        </table>
-    </div>
+			<!-- Service Table -->
+			<table class="min-w-full bg-white rounded-lg shadow-md">
+				<thead class="bg-gray-200 text-gray-600 uppercase text-sm leading-normal">
+					<tr>
+						<th class="py-3 px-3 text-left">ID</th>
+						<th class="py-3 px-3 text-left">Name</th>
+						<th class="py-3 px-3 text-left">Description</th>
+						<th class="py-3 px-3 text-left">Port</th>
+						<th class="py-3 px-3 text-left">Auth</th>
+						<th class="py-3 px-3 text-left">Status</th>
+						<th class="py-3 text-left"></th>
+					</tr>
+				</thead>
+				<tbody class="text-gray-700 text-sm font-light">
+					{{range .}}
+					<tr class="border-b border-gray-200">
+						<td class="py-3 px-3">{{.ID}}</td>
+						<td class="py-3 px-3">{{.Name}}</td>
+						<td class="py-3 px-3">{{.Description}}</td>
+						<td class="py-3 px-3">{{.Port}}</td>
+						<td class="py-3 px-3 font-medium requireAuth">{{.RequireAuth}}</td>
+						<td class="py-3 px-3"><span class="status-badge px-4 py-1 rounded-full">{{.Status}}</span></td>
+						<td class="py-3 text-red-500 cursor-pointer hover:text-red-800" onclick="deleteService('{{.ID}}')">
+							delete
+						</td>
+					</tr>
+					{{end}}
+				</tbody>
+			</table>
+		</div>
 
-    <!-- Modal Dialog -->
-    <div id="dialog" class="fixed inset-0 bg-black bg-opacity-40 hidden flex items-center justify-center">
-        <div class="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
-            <h2 class="text-xl font-semibold mb-4">New Service</h2>
-            <form id="serviceForm" class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium">Name</label>
-                    <input type="text" name="name" required class="w-full border border-gray-300 rounded px-3 py-2">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium">Description</label>
-                    <input type="text" name="description" required class="w-full border border-gray-300 rounded px-3 py-2">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium">Port</label>
-                    <input type="number" name="port" required class="w-full border border-gray-300 rounded px-3 py-2">
-                </div>
-                <div class="flex items-center space-x-4">
-                    <label class="text-sm font-medium">Require authentication</label>
-                    <input type="checkbox" name="auth" class="transform scale-125 accent-blue-600">
-                </div>
-                <div class="flex justify-end space-x-2 pt-4">
-                    <button type="button" id="cancelDialog" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Submit</button>
-                </div>
-            </form>
-        </div>
-    </div>
+		<!-- Modal Dialog -->
+		<div id="dialog" class="fixed inset-0 bg-black bg-opacity-40 hidden flex items-center justify-center">
+			<div class="bg-white rounded-lg p-6 w-full max-w-md shadow-lg">
+				<h2 class="text-xl font-semibold mb-4">New Service</h2>
+				<form id="serviceForm" class="space-y-4">
+					<div>
+						<label class="block text-sm font-medium">Name</label>
+						<input type="text" name="name" required class="w-full border border-gray-300 rounded px-3 py-2" />
+					</div>
+					<div>
+						<label class="block text-sm font-medium">Description</label>
+						<input type="text" name="description" required class="w-full border border-gray-300 rounded px-3 py-2" />
+					</div>
+					<div>
+						<label class="block text-sm font-medium">Port</label>
+						<input type="number" name="port" required class="w-full border border-gray-300 rounded px-3 py-2" />
+					</div>
+					<div class="flex items-center space-x-4">
+						<label class="text-sm font-medium">Require authentication</label>
+						<input type="checkbox" name="auth" class="transform scale-125 accent-blue-600" />
+					</div>
+					<div class="flex justify-end space-x-2 pt-4">
+						<button type="button" id="cancelDialog" class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400">
+							Cancel
+						</button>
+						<button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Submit</button>
+					</div>
+				</form>
+			</div>
+		</div>
 
-    <script>
-    async function deleteService(id) {
-        const res = await fetch("/service/" + id, {
-            method: "DELETE",
-        });
+		<script>
+			async function deleteService(id) {
+				const res = await fetch("/service/" + id, {
+					method: "DELETE",
+				})
 
-        if (res.ok) {
-            location.reload();
-        } else {
-            alert("Failed to delete service");
-        }
-    }
+				if (res.ok) {
+					location.reload()
+				} else {
+					alert("Failed to delete service")
+				}
+			}
 
-    for (const elem of document.getElementsByClassName("requireAuth")) {
-        elem.classList.add(elem.innerText == "true" ? "text-green-500" : "text-red-400");
-    }
+			for (const elem of document.getElementsByClassName("requireAuth")) {
+				elem.classList.add(elem.innerText == "true" ? "text-green-500" : "text-red-400")
+			}
 
-    const dialog = document.getElementById('dialog');
-    document.getElementById('openDialog').onclick = () => dialog.classList.remove('hidden');
-    document.getElementById('cancelDialog').onclick = () => dialog.classList.add('hidden');
+			const dialog = document.getElementById("dialog")
+			document.getElementById("openDialog").onclick = () => dialog.classList.remove("hidden")
+			document.getElementById("cancelDialog").onclick = () => dialog.classList.add("hidden")
 
-    document.getElementById('serviceForm').onsubmit = async (e) => {
-        e.preventDefault();
-        const form = e.target;
-        const data = {
-            name: form.name.value.trim(),
-            description: form.description.value.trim(),
-            port: form.port.value.trim(),
-            requireAuth: form.auth.checked,
-        };
+			document.getElementById("serviceForm").onsubmit = async e => {
+				e.preventDefault()
+				const form = e.target
+				const data = {
+					name: form.name.value.trim(),
+					description: form.description.value.trim(),
+					port: form.port.value.trim(),
+					requireAuth: form.auth.checked,
+				}
 
-        const response = await fetch('/service', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data)
-        });
+				const response = await fetch("/service", {
+					method: "POST",
+					headers: {
+						"Content-Type": "application/json",
+					},
+					body: JSON.stringify(data),
+				})
 
-        if (response.ok) {
-            location.reload();
-        } else {
-            alert('Failed to add service');
-        }
-    };
+				if (response.ok) {
+					location.reload()
+				} else {
+					alert("Failed to add service")
+				}
+			}
 
-    document.querySelectorAll('.status-badge').forEach(el => {
-        const status = el.textContent.trim().toLowerCase();
-        switch (status) {
-            case 'running':
-                el.classList.add('bg-green-200', 'text-green-800');
-                break;
-            case 'stopped':
-                el.classList.add('bg-yellow-200', 'text-yellow-800');
-                break;
-            case 'crashed':
-                el.classList.add('bg-red-200', 'text-red-800');
-                break;
-            default:
-                el.classList.add('bg-gray-200', 'text-gray-800');
-        }
-    });
-    </script>
-</body>
+			document.querySelectorAll(".status-badge").forEach(el => {
+				const status = el.textContent.trim().toLowerCase()
+				switch (status) {
+					case "running":
+						el.classList.add("bg-green-200", "text-green-800")
+						break
+					case "stopped":
+						el.classList.add("bg-yellow-200", "text-yellow-800")
+						break
+					case "crashed":
+						el.classList.add("bg-red-200", "text-red-800")
+						break
+					default:
+						el.classList.add("bg-gray-200", "text-gray-800")
+				}
+			})
+		</script>
+	</body>
 </html>

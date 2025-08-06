@@ -23,6 +23,10 @@ func proxyHandler(config *config.Config, db *database.Database) http.Handler {
 		log.Fatal(err)
 	}
 
+	mux.Get("/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "web/index.html")
+	})
+
 	return mux
 }
 
